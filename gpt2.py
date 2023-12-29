@@ -146,6 +146,7 @@ class GPT2(nn.Module):
         return logits
 
     def generate(self, x, temperature=1.0):
+        assert temperature >= 0, "temperature must be greater or equal to 0"
         while True:
             # if the sequence context is growing too long we must crop it at n_positions
             x = x if x.shape[1] <= self.n_positions else x[:, -self.n_positions:]
@@ -159,8 +160,7 @@ class GPT2(nn.Module):
             if temperature == 0:
                 x_next = mx.argmax(logits, axis=-1)
             else:
-                # TODO: not sure why softmax isn't applied first,
-                # but same pattern used in mlx-examples
+                # Sample using gumbel-max trick
                 x_next = mx.random.categorical(logits * (1 / temperature))
 
             # append sampled index to the running sequence and continue
